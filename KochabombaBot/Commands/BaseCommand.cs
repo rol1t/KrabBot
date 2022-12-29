@@ -37,12 +37,15 @@ namespace KochabombaBot.Commands
                 return false;
             }
 
-            if (!_commands.Contains(_msg.Content.ToLower()))
+            foreach (var command in _commands)
             {
-                return false;
+                if (_msg.Content.ToLower().Contains(command))
+                {
+                    return true;
+                }
             }
 
-            return true;
+            return false;
         }
 
         /// <summary>

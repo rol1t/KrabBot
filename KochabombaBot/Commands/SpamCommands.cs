@@ -1,26 +1,12 @@
-﻿using Discord.WebSocket;
-using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
+using static System.Net.Mime.MediaTypeNames;
 
 namespace KochabombaBot.Commands
 {
     public class SpamCommands : BaseCommand
     {
-        private const double defaultInterval = 0.1;
-
-        private const int defaultCount = 10;
-
-        private const string defaultText = "@everyone";
-
-        private List<string> _attributes = new List<string>() 
-        {
-            "times",
-            "interval"
-        };
-
         public override List<string> _commands { get; set; } = new List<string>()
         {
             "!spam"
@@ -29,71 +15,43 @@ namespace KochabombaBot.Commands
         public override string Description()
         {
             return "Спамит сообщение. " +
-                @"```Шаблон: !spam [message=@everyonе] [times=50]```";
+                @"```Шаблон: !spam --@everyonе --times=50```";
         }
 
         public override Task Execute()
         {
-            var commands = _msg.Content.Split();
+            var args = GetAttributes(_msg.Content);
 
             var messages = new List<string>();
 
-
-            if (!_commands.Contains(commands[0]) || _msg.Author.IsBot)
+            for (int i = 0; i < args.times; i++)
             {
-                return Task.CompletedTask;
-            }
-
-            if (commands.Count() == 1)
-            {
-                for (int i = 0; i < defaultCount; i++)
-                {
-                    _msg.Channel.SendMessageAsync(defaultText);
-                }
-
-                return Task.CompletedTask;
-            }
-
-            //var attibutes = GetAttributes(commands.ToList());
-
-            for (int i = 0; i < defaultCount; i++)
-            {
-                var message = commands.TakeLast(commands.Length - 1).ToArray();
-                _msg.Channel.SendMessageAsync(string.Join(' ', message));
+                _msg.Channel.SendMessageAsync(args.message);
             }
 
             return Task.CompletedTask;
         }
 
-        private (int times, double interval) GetAttributes(List<string> words)
+        private (string message, int times) GetAttributes(string message)
         {
-            var attributes = words.Where(word => string.Join(' ', _attributes).Contains(word));
-            var times = defaultCount;
-            var interval = defaultInterval;
+            var attributes = message.Split(' ').TakeLast(2);
 
-
-            foreach (var item in attributes)
+            if (attributes.Count() == 1)
             {
-                var attribute = _attributes.Where(a => a.Contains(item)).FirstOrDefault();
-
-                if (attribute != null)
-                    continue;
-
-                var items = attribute.Split('=');
-
-                switch (items[0])
-                {
-                    case "interval":
-                        interval = double.TryParse(item, out var i) == true ? i : interval;
-                        break;
-                    case "times":
-                        times = int.TryParse(items[1], out var t) == true ? t : times;
-                        break;
-                    default:
-                        break;
-                }
+                return (attributes.FirstOrDefault(), 10);
             }
-            return (times, interval);
+
+            if (attributes.Count() != 2)
+            {
+                return ("@everyone", 5);
+            }
+
+            if (!int.TryParse(attributes.LastOrDefault(), out var times))
+            {
+                times = 10;
+            }
+
+            return (attributes.FirstOrDefault(), times);
         }
     }
 }
