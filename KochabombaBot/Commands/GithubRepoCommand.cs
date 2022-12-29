@@ -15,6 +15,7 @@ namespace KochabombaBot.Commands
         };
 
         public override string Description() => "Ссылка на репозиторий";
+
         public override Task Execute()
         {
             return _msg.Channel.SendMessageAsync("https://github.com/rol1t/KrabBot");
